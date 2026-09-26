@@ -1,32 +1,29 @@
 import { useState } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X, Save } from 'lucide-react'
 
-export default function AddTransactionModal({ categories, onClose, onCreate }) {
-  const [type, setType] = useState('expense')
-  const [category, setCategory] = useState(categories.expense?.[0] || 'Food')
-  const [amount, setAmount] = useState('')
-  const [description, setDescription] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+export default function EditTransactionModal({ transaction, categories, onClose, onUpdate }) {
+  const [type, setType] = useState(transaction.type)
+  const [category, setCategory] = useState(transaction.category)
+  const [amount, setAmount] = useState(transaction.amount)
+  const [description, setDescription] = useState(transaction.description || '')
+  const [date, setDate] = useState(transaction.date || '')
 
   function handleTypeChange(newType) {
     setType(newType)
-    setCategory(categories[newType]?.[0] || '')
-  }
-
-  function addQuickAmount(val) {
-    const current = parseFloat(amount) || 0
-    setAmount((current + val).toString())
+    if (categories[newType] && !categories[newType].includes(category)) {
+      setCategory(categories[newType][0] || '')
+    }
   }
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) return
-    onCreate({
+    onUpdate(transaction.id, {
       type,
       category,
       amount: parseFloat(amount),
-      description: description.trim(),
-      date,
+      description,
+      date: date || undefined,
     })
     onClose()
   }
@@ -35,7 +32,7 @@ export default function AddTransactionModal({ categories, onClose, onCreate }) {
     <div className="modal-backdrop" onClick={onClose}>
       <form className="modal tx-form" onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}>
         <div className="modal-header">
-          <h3>Add New Transaction</h3>
+          <h3>Edit Transaction</h3>
           <button type="button" className="close-btn" onClick={onClose}>
             <X size={18} />
           </button>
@@ -74,18 +71,11 @@ export default function AddTransactionModal({ categories, onClose, onCreate }) {
           <input
             type="number"
             step="0.01"
-            placeholder="e.g. 1500"
+            placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            autoFocus
           />
-          <div className="quick-pills">
-            <button type="button" onClick={() => addQuickAmount(100)}>+₹100</button>
-            <button type="button" onClick={() => addQuickAmount(500)}>+₹500</button>
-            <button type="button" onClick={() => addQuickAmount(1000)}>+₹1,000</button>
-            <button type="button" onClick={() => addQuickAmount(5000)}>+₹5,000</button>
-          </div>
         </div>
 
         <div className="form-group">
@@ -100,7 +90,7 @@ export default function AddTransactionModal({ categories, onClose, onCreate }) {
         <div className="form-group">
           <label>Description</label>
           <input
-            placeholder="e.g. Grocery shopping, Fuel, Client payment"
+            placeholder="Note or description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -111,7 +101,7 @@ export default function AddTransactionModal({ categories, onClose, onCreate }) {
             Cancel
           </button>
           <button type="submit" className="primary-btn">
-            <Plus size={16} /> Save Transaction
+            <Save size={16} /> Save Changes
           </button>
         </div>
       </form>
